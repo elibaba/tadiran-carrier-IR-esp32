@@ -19,7 +19,7 @@ Ground and 3.3V to DHT22 and KY022 are trivial.
 * I got better results without a resistor, but hey - I might be wrong here...
 
 ### Caveats
-* The TSAL6400 IR led is rated for 5V, therefore the board is powered by USB and 5V is taken via the blue lead from VIN on the ESP32 to the left leg of the transistor
+* The TSAL6400 IR led is rated for 5V, therefore the board is powered by USB and 5V is taken via the blue lead from VIN on the ESP32 to the left leg of the transistor (blue lead)
 * Flash esphome to the ESP32, and use the ac-control.yaml to control your AC from the frontend
 * I am still looking for a way to integrate the raw IR buttons and switches to the native esphome terhmostate or climate component.
 <br><br>
