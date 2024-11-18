@@ -1,0 +1,184 @@
+esphome:
+  name: ir-blaster-temp
+  friendly_name: AC-Control
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+    
+# Enable logging
+logger:
+  level: DEBUG
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: REPLACE_WITH_YOUR_KEY
+  services:
+    - service: send_raw_command
+      variables:
+        command: int[]
+      then:
+        - remote_transmitter.transmit_raw:
+            code: !lambda 'return command;'
+
+ota:
+  - platform: esphome
+    password: REPLACE_WITH_YOUR_PASS
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "AC Fallback Hotspot"
+    password: "12345678"
+
+captive_portal:
+
+# create a sensor to get temperature and humidity
+sensor:
+  - platform: dht
+    model: DHT22
+    pin: 21
+    temperature:
+      id: Living_Room_Temperature
+      name: "Living Room Temperature"
+    humidity:
+      id: Living_Room_Humidity
+      name: "Living Room Humidity"
+    update_interval: 30s
+
+## IR STUFF ###############################3
+
+remote_receiver:
+  id: ir_reciever
+  pin: 
+    number: GPIO23
+    inverted: true
+    mode: INPUT_PULLUP
+  dump: raw
+
+remote_transmitter:
+  pin: GPIO15
+  carrier_duty_percent: 50%
+
+switch:
+  - platform: template
+    name: "AC switch"
+    id: AC_on_off
+    # Action to turn the AC on
+    turn_on_action:
+      - remote_transmitter.transmit_raw:
+          code: [7884, -4336, 1757, -606, 589, -1808, 557, -1808, 583, -1808, 558, -1807, 557, -1780, 584, 
+                -1780, 585, -1834, 1700, -607, 588, -1783, 608, -1808, 557, -1779, 586, -1807, 557, -1809, 1726, 
+                -606, 588, -1835, 530, -1808, 583, -1782, 584, -1781, 583, -1808, 1700, -633, 1758, -607, 588, 
+                -1780, 585, -1806, 585, -1808, 557, -1778, 586, -1809, 556, -1808, 557, -1779, 585, -1779, 586, 
+                -1808, 583, -1781, 584, -1780, 585, -1781, 583, -1808, 557, -1781, 584, -1779, 585, -1782, 610, 
+                -1780, 585, -1780, 584, -1779, 585, -1781, 584, -1808, 557, -1779, 1754, -609, 1756, -634, 588, 
+                -1779, 586, -1779, 586, -1779, 585, -1779, 586, -1779, 586, -1780, 609, -1781, 586, -1781, 583, 
+                -1778, 587, -1778, 587, -1779, 586, -1778, 1755, -608, 1756, -635, 587, -1780, 
+                585, -1779, 586, -1779, 586, -1777, 1623]
+          carrier_frequency: 38kHz
+      - remote_transmitter.transmit_raw:
+          code: [7920, -4329, 1730, -634, 587, -1778, 587, -1778, 587, -1778, 587, -1779, 611, -1779, 586, -1778, 
+                587, -1778, 1729, -635, 587, -1778, 587, -1778, 587, -1778, 612, -1779, 587, -1777, 1729, -636, 587, 
+                -1778, 588, -1776, 587, -1778, 587, -1778, 613, -1778, 1729, -636, 1729, -636, 586, -1778, 587, 
+                -1780, 585, -1778, 586, -1778, 614, -1778, 586, -1778, 588, -1777, 587, -1778, 586, -1778, 588, 
+                -1803, 561, -1780, 611, -1777, 587, -1778, 587, -1778, 586, -1778, 586, -1779, 584, -1781, 583, 
+                -1808, 581, -1784, 580, -1784, 580, -1786, 578, -1787, 1745, -620, 1720, -644, 551, -1838, 552, 
+                -1838, 527, -1838, 526, -1839, 525, -1840, 525, -1839, 525, -1840, 524, -1842, 548, -1842, 523, 
+                -1842, 522, -1843, 521, -1845, 1688, -677, 1684, -683, 512, -1876, 515, -1876, 489, -1876, 488, -1877, 1524]
+          carrier_frequency: 38kHz
+      - switch.template.publish:
+          id: AC_on_off
+          state: ON
+    # Action to turn the AC off
+    turn_off_action:
+      - remote_transmitter.transmit_raw:
+          code: [7910, -4340, 1755, -607, 580, -1814, 585, -1809, 555, -1782, 584, -1807, 557, -1779, 586, -1780, 584, -1834, 
+                1699, -635, 587, -1780, 585, -1808, 557, -1808, 557, -1779, 584, -1782, 1752, -608, 610, -1783, 586, -1808, 556, -1782, 583, -1780, 
+                585, -1808, 1725, -608, 1756, -608, 608, -1760, 611, -1779, 586, -1778, 587, -1807, 557, -1779, 586, -1807, 557, -1780, 601, -1766, 
+                608, -1779, 586, -1780, 585, -1782, 582, -1805, 560, -1803, 561, -1780, 575, -1815, 586, -1803, 561, -1780, 585, -1802, 
+                562, -1780, 584, -1782, 583, -1780, 610, -1781, 585, -1802, 563, -1779, 1726, -636, 1721, -644, 585, -1780, 584, -1781, 607, -1783, 
+                585, -1780, 585, -1780, 585, -1778, 586, -1779, 586, -1805, 1730, -609, 582, -1784, 1755, -635, 586, -1778, 1725, -640, 
+                581, -1783, 582, -1783, 580, -1783, 1616]
+          carrier_frequency: 38kHz
+      - remote_transmitter.transmit_raw:
+          code: [7905, -4342, 1720, -645, 578, -1787, 578, -1786, 583, -1808, 577, -1788, 576, -1789, 554, -1810, 552, -1814, 1718, -645, 551, -1815, 
+                576, -1836, 529, -1836, 528, -1837, 528, -1836, 1696, -647, 548, -1865, 501, -1837, 552, -1839, 527, -1837, 
+                528, -1837, 1668, -697, 1695, -670, 525, -1839, 525, -1866, 524, -1841, 525, -1839, 526, -1839, 525, -1839, 525, -1840, 525, -1839, 
+                525, -1840, 551, -1840, 524, -1841, 524, -1840, 524, -1841, 523, -1841, 524, -1841, 523, -1842, 549, -1842, 521, -1844, 
+                521, -1844, 520, -1845, 519, -1846, 517, -1848, 516, -1850, 539, -1876, 1630, -735, 1630, -735, 487, -1877, 487, -1878, 487, -1878, 
+                487, -1877, 514, -1878, 487, -1877, 488, -1877, 487, -1878, 1655, -708, 488, -1878, 1655, -709, 513, -1879, 1629, -735, 486, -1880, 
+                485, -1904, 461, -1904, 1497]
+          carrier_frequency: 38kHz
+      - switch.template.publish:
+          id: AC_on_off
+          state: OFF
+  
+button:
+  - platform: template
+    name: "AC Temp Up"
+    id: AC_temp_up
+    on_press:
+      - remote_transmitter.transmit_raw:
+          code: [TODO]
+          carrier_frequency: 38kHz
+  - platform: template
+    name: "AC Temp Down"
+    id: AC_temp_down
+    on_press:
+      - remote_transmitter.transmit_raw:
+          code: [TODO]
+          carrier_frequency: 38kHz
+
+select:
+# define a select for the device state control
+# https://esphome.io/components/select/template.html?highlight=template
+  - platform: template
+    name: "AC Mode"
+    optimistic: true
+    id: AC_mode
+    options:
+      - "Off"
+      - "Cool"
+      - "Heat"
+    initial_option: "Off"
+    on_value:
+      then:
+      - logger.log:
+          format: "Heat Mode: %s (index %d)"
+          args: ["x.c_str()", "i"]
+      - if:
+          condition:
+            lambda: |-
+              return (id(AC_mode).active_index() == 0);
+          then:
+          - logger.log: "Off"
+          - remote_transmitter.transmit_raw:
+              code: [TODO]
+              carrier_frequency: 38kHz
+
+      - if:
+          condition:
+            lambda: |-
+              return (id(AC_mode).active_index() == 1);
+          then:
+          - logger.log: "Cool"
+          - remote_transmitter.transmit_raw:
+              code: [TODO]
+              carrier_frequency: 38kHz
+
+      - if:
+          condition:
+            lambda: |-
+              return (id(AC_mode).active_index() == 2);
+          then:
+          - logger.log: "Heat"
+          - remote_transmitter.transmit_raw:
+              code: [TODO]
+              carrier_frequency: 38kHz
+
